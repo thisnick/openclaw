@@ -103,7 +103,7 @@ describe("memory plugin e2e", () => {
     expect(shouldCapture("x")).toBe(false);
     expect(shouldCapture("<relevant-memories>injected</relevant-memories>")).toBe(false);
     expect(shouldCapture("<system>status</system>")).toBe(false);
-    expect(shouldCapture("Here is a short **summary**\\n- bullet")).toBe(false);
+    expect(shouldCapture("Here is a short **summary**\n- bullet")).toBe(false);
   });
 
   test("detectCategory classifies using production logic", async () => {
