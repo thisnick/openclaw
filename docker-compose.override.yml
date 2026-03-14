@@ -1,0 +1,77 @@
+# Local overrides — not tracked by git, safe across upstream updates.
+# Docker Compose merges this automatically with docker-compose.yml.
+services:
+  openclaw-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.custom
+    image: openclaw:custom
+    entrypoint: ["gateway-vnc-entrypoint"]
+    environment:
+      DISPLAY: ":1"
+      GOG_KEYRING_BACKEND: ${GOG_KEYRING_BACKEND}
+      GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+    ports:
+      - "6080:6080"
+      - "18789:18789"
+    dns:
+      - 100.100.100.100
+    volumes:
+      - openclaw-node-home:/home/node
+      - /home/nick/code/occode:/home/node/code
+      - /home/nick/.claude:/home/node/.claude
+
+  openclaw-cli:
+    image: openclaw:custom
+    network_mode: "service:openclaw-gateway"
+    environment:
+      GOG_KEYRING_BACKEND: ${GOG_KEYRING_BACKEND}
+      GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+    volumes:
+      - openclaw-node-home:/home/node
+      - /home/nick/code/occode:/home/node/code
+      - /home/nick/.claude:/home/node/.claude
+
+  ib-gateway:
+    image: heshiming/ibga
+    restart: unless-stopped
+    environment:
+      IB_USERNAME: ${TWS_USERID}
+      IB_PASSWORD: ${TWS_PASSWORD}
+      TOTP_KEY: ${IBKR_TOTP_SECRET}
+      IB_REGION: "America"
+      IB_TIMEZONE: "America/Los_Angeles"
+      IB_LOGINTAB: "IB API"
+      IB_LOGINTYPE: "Live Trading"
+      IB_LOGOFF: "11:55 PM"
+      IBGA_VNC_PASSWORD: ${IB_VNC_SERVER_PASSWORD}
+    ports:
+      - "127.0.0.1:5800:5800"
+    volumes:
+      - /home/nick/.config/ib-gateway/program:/home/ibg
+      - /home/nick/.config/ib-gateway/settings:/home/ibg_settings
+
+  # agent-wechat: migrated to cloud — commented out to disable locally.
+  # Volumes are preserved; uncomment to restore.
+  # agent-wechat:
+  #   image: ghcr.io/thisnick/agent-wechat:latest
+  #   container_name: agent-wechat
+  #   security_opt:
+  #     - seccomp=unconfined
+  #   cap_add:
+  #     - SYS_PTRACE
+  #   ports:
+  #     - "6174:6174"
+  #     - "5900:5900"
+  #   volumes:
+  #     - agent-wechat-data:/data
+  #     - agent-wechat-wechat-home:/home/wechat
+  #     - /home/nick/.config/agent-wechat/token:/data/auth-token:ro
+  #   restart: unless-stopped
+
+volumes:
+  openclaw-node-home:
+  agent-wechat-data:
+  agent-wechat-wechat-home:
